@@ -340,10 +340,27 @@ impl Buffer {
     /// Gets an iterator for the data from a channel.
     pub fn channel_iter<T>(&self, chan: &Channel) -> IntoIter<T> {
         unsafe {
-            let begin = ffi::iio_buffer_first(self.buf, chan.chan) as *mut T;
+            let begin = ffi::iio_buffer_first(self.buf, chan.chan) as *const T;
             let end = ffi::iio_buffer_end(self.buf) as *const T;
             let ptr = begin;
             let step: isize = ffi::iio_buffer_step(self.buf) / mem::size_of::<T>() as isize;
+
+            IntoIter {
+                phantom: PhantomData,
+                ptr,
+                end,
+                step,
+            }
+        }
+    }
+
+    /// Returns an iterator that always reads 32-bit samples
+    pub fn channel_iter32(&self, chan: &Channel) -> IntoIter<u32> {
+        unsafe {
+            let begin = ffi::iio_buffer_first(self.buf, chan.chan) as *const u32;
+            let end = ffi::iio_buffer_end(self.buf) as *const u32;
+            let ptr = begin;
+            let step: isize = 4;
 
             IntoIter {
                 phantom: PhantomData,
