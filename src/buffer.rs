@@ -360,7 +360,7 @@ impl Buffer {
             let begin = ffi::iio_buffer_first(self.buf, chan.chan) as *const u32;
             let end = ffi::iio_buffer_end(self.buf) as *const u32;
             let ptr = begin;
-            let step: isize = 4;
+            let step: isize = 1;
 
             IntoIter {
                 phantom: PhantomData,
