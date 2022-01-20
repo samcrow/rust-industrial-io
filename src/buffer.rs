@@ -379,12 +379,12 @@ impl Buffer {
     /// This function returns None if any of the following is true:
     /// * The address of the first sample in the buffer is not appropriately aligned for a u32
     /// * The number of bytes in the buffer is not a multiple of the size of a u32
-    pub fn as_u32_slice(&self, chan: &Channel) -> Option<&[u32]> {
+    pub fn as_u32_slice(&self) -> Option<&[u32]> {
         unsafe {
-            let begin = ffi::iio_buffer_first(self.buf, chan.chan) as *const u32;
+            let begin = ffi::iio_buffer_start(self.buf) as *const u32;
             let end = ffi::iio_buffer_end(self.buf) as *const u32;
             // Check that begin is correctly aligned
-            if begin.align_offset(mem::align_of::<u32>()) != 0 {
+            if begin as usize % mem::align_of::<u32>() != 0 {
                 return None
             }
             // Check length
@@ -394,6 +394,32 @@ impl Buffer {
             }
             let length_samples = length_bytes / 4;
             Some(slice::from_raw_parts(begin, length_samples))
+        }
+    }
+
+    /// Returns a mutable slice of u32s covering the buffer samples, if possible
+    ///
+    /// Caution: If multiple channels are enabled, the returned slice may includes samples from
+    /// additional channels beyond the one requested channel.
+    ///
+    /// This function returns None if any of the following is true:
+    /// * The address of the first sample in the buffer is not appropriately aligned for a u32
+    /// * The number of bytes in the buffer is not a multiple of the size of a u32
+    pub fn as_u32_slice_mut(&mut self) -> Option<&mut [u32]> {
+        unsafe {
+            let begin = ffi::iio_buffer_start(self.buf) as *mut u32;
+            let end = ffi::iio_buffer_end(self.buf) as *mut u32;
+            // Check that begin is correctly aligned
+            if begin as usize % mem::align_of::<u32>() != 0 {
+                return None
+            }
+            // Check length
+            let length_bytes = end as usize - begin as usize;
+            if length_bytes % mem::size_of::<u32>() != 0 {
+                return None
+            }
+            let length_samples = length_bytes / 4;
+            Some(slice::from_raw_parts_mut(begin, length_samples))
         }
     }
 }
