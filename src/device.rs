@@ -235,6 +235,43 @@ impl Device {
         AttrIterator { dev: self, idx: 0 }
     }
 
+    // ----- Debug attributes -----
+
+    /// Writes a debug attribute
+    fn debug_attr_write_str(&self, attr: &str, val: &str) -> Result<()> {
+        let attr = CString::new(attr)?;
+        let val = CString::new(val)?;
+        let ret = unsafe { ffi::iio_device_debug_attr_write(self.dev, attr.as_ptr(), val.as_ptr()) };
+        sys_result(ret as i32, ())
+    }
+
+    /// Writes a debug attribute
+    pub fn debug_attr_write<T: Display + Any>(&self, attr: &str, val: T) -> Result<()> {
+        let sval = attr_to_string(val)?;
+        self.debug_attr_write_str(attr, &sval)
+    }
+
+    /// Writes a debug attribute
+    pub fn debug_attr_write_bool(&self, attr: &str, val: bool) -> Result<()> {
+        let attr = CString::new(attr)?;
+        let ret = unsafe { ffi::iio_device_debug_attr_write_bool(self.dev, attr.as_ptr(), val) };
+        sys_result(ret, ())
+    }
+
+    /// Writes a debug attribute
+    pub fn debug_attr_write_int(&self, attr: &str, val: i64) -> Result<()> {
+        let attr = CString::new(attr)?;
+        let ret = unsafe { ffi::iio_device_debug_attr_write_longlong(self.dev, attr.as_ptr(), val) };
+        sys_result(ret, ())
+    }
+
+    /// Writes a debug attribute
+    pub fn debug_attr_write_float(&self, attr: &str, val: f64) -> Result<()> {
+        let attr = CString::new(attr)?;
+        let ret = unsafe { ffi::iio_device_debug_attr_write_double(self.dev, attr.as_ptr(), val) };
+        sys_result(ret, ())
+    }
+
     // ----- Channels -----
 
     /// Gets the number of channels on the device
