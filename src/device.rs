@@ -238,7 +238,7 @@ impl Device {
     // ----- Debug attributes -----
 
     /// Writes a debug attribute
-    fn debug_attr_write_str(&self, attr: &str, val: &str) -> Result<()> {
+    pub fn debug_attr_write_str(&self, attr: &str, val: &str) -> Result<()> {
         let attr = CString::new(attr)?;
         let val = CString::new(val)?;
         let ret = unsafe { ffi::iio_device_debug_attr_write(self.dev, attr.as_ptr(), val.as_ptr()) };
