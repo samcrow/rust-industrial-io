@@ -422,6 +422,24 @@ impl Buffer {
             Some(slice::from_raw_parts_mut(begin, length_samples))
         }
     }
+
+    /// Copies the complete contents of this buffer to a slice of bytes
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the length of `destination` is not the same as the size of this
+    /// buffer in bytes
+    pub fn copy_to_slice(&self, destination: &mut [u8]) {
+        unsafe {
+            let begin = ffi::iio_buffer_start(self.buf) as *const u8;
+            let end = ffi::iio_buffer_end(self.buf) as *const u8;
+            let buffer_size_bytes = end as usize - begin as usize;
+            assert_eq!(buffer_size_bytes, destination.len(), "Destination not the same length as buffer");
+
+            let destination_ptr = destination.as_mut_ptr();
+            ptr::copy_nonoverlapping(begin, destination_ptr, buffer_size_bytes);
+        }
+    }
 }
 
 /// Destroy the underlying buffer when the object scope ends.
